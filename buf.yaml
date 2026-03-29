@@ -13,7 +13,4 @@ lint:
 
 breaking:
   use:
-    - FILE
-  except:
-    - FILE_OPTION_JAVA_MULTIPLE_FILES_CHANGED
-    - FILE_OPTION_JAVA_PACKAGE_CHANGED
+    - WIRE
