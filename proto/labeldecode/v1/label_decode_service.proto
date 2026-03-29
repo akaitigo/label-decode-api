@@ -1,0 +1,107 @@
+// =============================================================================
+// 食品表示テキスト構造化 gRPC サービス定義
+//
+// 食品パッケージの一括表示テキストを受け取り、原材料・添加物・アレルゲンを
+// 構造化データとして返す。
+// =============================================================================
+
+syntax = "proto3";
+
+// 食品表示デコードサービスのパッケージ。
+package akaitigo.labeldecode.v1;
+
+// 食品表示テキストを構造化データに変換するサービス。
+service LabelDecodeService {
+  // 食品表示テキストを解析し、構造化データを返す。
+  rpc ParseLabel(ParseLabelRequest) returns (ParseLabelResponse);
+
+  // テキストからアレルゲンのみを検出する。
+  rpc DetectAllergens(DetectAllergensRequest) returns (DetectAllergensResponse);
+
+  // 添加物を用途別に分類する。
+  rpc ClassifyAdditives(ClassifyAdditivesRequest) returns (ClassifyAdditivesResponse);
+}
+
+// ParseLabel のリクエスト。
+message ParseLabelRequest {
+  // 食品表示テキスト（一括表示の原材料名欄）。必須。
+  string raw_text = 1;
+}
+
+// ParseLabel のレスポンス。
+message ParseLabelResponse {
+  // 解析結果。
+  ParsedLabel label = 1;
+}
+
+// 解析済み食品表示データ。
+message ParsedLabel {
+  // 原材料リスト（添加物を除く）。
+  repeated Ingredient ingredients = 1;
+  // 添加物リスト（スラッシュルール以降）。
+  repeated Additive additives = 2;
+  // 検出されたアレルゲンリスト。
+  repeated Allergen allergens = 3;
+  // 元のテキスト。
+  string original_text = 4;
+}
+
+// 原材料。
+message Ingredient {
+  // 正規化された原材料名。
+  string name = 1;
+  // 原材料に含まれるアレルゲン（括弧内表記から検出）。
+  repeated string allergen_sources = 2;
+}
+
+// 添加物。
+message Additive {
+  // 添加物名。
+  string name = 1;
+  // 用途分類（保存料、着色料、甘味料、酸化防止剤等）。
+  string category = 2;
+}
+
+// アレルゲン。
+message Allergen {
+  // アレルゲン名（例: えび、かに、小麦、そば、卵、乳、落花生）。
+  string name = 1;
+  // 表示義務区分。
+  AllergenType type = 2;
+  // 検出元のテキスト。
+  string source_text = 3;
+}
+
+// アレルゲンの表示義務区分。
+enum AllergenType {
+  // 未指定。
+  ALLERGEN_TYPE_UNSPECIFIED = 0;
+  // 特定原材料（表示義務: えび、かに、くるみ、小麦、そば、卵、乳、落花生）。
+  ALLERGEN_TYPE_MANDATORY = 1;
+  // 特定原材料に準ずるもの（表示推奨: アーモンド、あわび等20品目）。
+  ALLERGEN_TYPE_RECOMMENDED = 2;
+}
+
+// DetectAllergens のリクエスト。
+message DetectAllergensRequest {
+  // 食品表示テキスト。必須。
+  string raw_text = 1;
+}
+
+// DetectAllergens のレスポンス。
+message DetectAllergensResponse {
+  // 検出されたアレルゲンリスト。
+  repeated Allergen allergens = 1;
+}
+
+// ClassifyAdditives のリクエスト。
+message ClassifyAdditivesRequest {
+  // 食品表示テキスト。必須。
+  string raw_text = 1;
+}
+
+// ClassifyAdditives のレスポンス。
+message ClassifyAdditivesResponse {
+  // 分類済み添加物リスト。
+  repeated Additive additives = 1;
+}

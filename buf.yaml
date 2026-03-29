@@ -1,0 +1,17 @@
+version: v2
+
+modules:
+  - path: proto
+    name: buf.build/akaitigo/label-decode-api
+
+lint:
+  use:
+    - STANDARD
+    - COMMENTS
+  except: []
+  disallow_comment_ignores: true
+
+breaking:
+  use:
+    - FILE
+  except: []
