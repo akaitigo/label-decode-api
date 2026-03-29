@@ -25,6 +25,7 @@ dependencies {
     implementation("com.google.protobuf:protobuf-kotlin:4.29.3")
 
     testImplementation("io.quarkus:quarkus-junit5")
+    testImplementation("io.quarkus:quarkus-jdbc-h2")
     testImplementation("io.rest-assured:rest-assured")
 }
 
