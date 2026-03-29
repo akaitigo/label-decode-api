@@ -60,7 +60,12 @@ class LabelParser {
     fun parse(rawText: String): ParsedLabel {
         val parts = SLASH_PATTERN.split(rawText, limit = 2)
         val ingredientsPart = parts[0].trim()
-        val additivesPart = if (parts.size > 1) parts[1].trim() else ""
+        val additivesPart =
+            if (parts.size > 1) {
+                parts[1].trim()
+            } else {
+                ""
+            }
 
         val ingredients = parseIngredients(ingredientsPart)
         val additives = parseAdditives(additivesPart)
@@ -75,7 +80,9 @@ class LabelParser {
     }
 
     fun parseIngredients(text: String): List<Ingredient> {
-        if (text.isBlank()) return emptyList()
+        if (text.isBlank()) {
+            return emptyList()
+        }
         return splitItems(text).map { item ->
             val allergenSources =
                 extractParenContent(item)
@@ -87,7 +94,9 @@ class LabelParser {
     }
 
     fun parseAdditives(text: String): List<Additive> {
-        if (text.isBlank()) return emptyList()
+        if (text.isBlank()) {
+            return emptyList()
+        }
         return splitItems(text).map { item ->
             val categoryMatch = ADDITIVE_CATEGORY_PATTERN.find(item)
             val category = categoryMatch?.groupValues?.get(1) ?: "その他"
@@ -129,7 +138,11 @@ class LabelParser {
             .map { it.trim() }
             .filter { it.isNotEmpty() }
 
-    private fun extractParenContent(text: String): List<String> = PAREN_PATTERN.findAll(text).map { it.groupValues[1] }.toList()
+    private fun extractParenContent(text: String): List<String> =
+        PAREN_PATTERN
+            .findAll(text)
+            .map { it.groupValues[1] }
+            .toList()
 
     private fun findAllergens(text: String): List<Allergen> {
         val found = mutableListOf<Allergen>()
