@@ -52,8 +52,8 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Compile
-        run: ./gradlew classes testClasses
+      - name: Build
+        run: ./gradlew build
         env:
           DB_USERNAME: labeldecode
           DB_PASSWORD: labeldecode
@@ -61,10 +61,3 @@ jobs:
 
       - name: Detekt
         run: ./gradlew detekt
-
-      - name: Test
-        run: ./gradlew test
-        env:
-          DB_USERNAME: labeldecode
-          DB_PASSWORD: labeldecode
-          DB_URL: jdbc:postgresql://localhost:5432/labeldecode

@@ -22,6 +22,7 @@ dependencies {
     implementation("io.quarkus:quarkus-hibernate-orm-panache-kotlin")
     implementation("io.quarkus:quarkus-flyway")
     implementation("org.jetbrains.kotlin:kotlin-stdlib")
+    implementation("com.google.protobuf:protobuf-kotlin:4.29.3")
 
     testImplementation("io.quarkus:quarkus-junit5")
     testImplementation("io.rest-assured:rest-assured")
