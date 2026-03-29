@@ -33,11 +33,12 @@ docs/adr/                                   -- Architecture Decision Records
 
 ## 禁止事項
 - `!!`（Kotlin非null断言）→ `?.let {}` / `?: throw` / `requireNotNull()` を使う
-- console.log / print文のコミット
-- TODO コメントのコミット（Issue化すること）
+- print文のコミット（detekt ForbiddenMethodCall で検出）
+- TODO/FIXME コメントのコミット（detekt ForbiddenComment で検出、Issue化すること）
 - .env・credentials のコミット
 - lint設定の無効化（ルール単位の disable 含む）
 - Proto フィールド番号の再利用（`reserved` で予約）
+- 詳細は `detekt.yml` がソースオブトゥルース
 
 ## Hooks
 - 設定: .claude/settings.json 参照

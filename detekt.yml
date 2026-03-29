@@ -2,6 +2,9 @@ build:
   maxIssues: 0
 
 complexity:
+  NestedBlockDepth:
+    active: true
+    threshold: 5
   TooManyFunctions:
     active: true
     thresholdInFiles: 15

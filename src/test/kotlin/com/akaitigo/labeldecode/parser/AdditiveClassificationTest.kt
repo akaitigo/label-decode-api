@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 class AdditiveClassificationTest {
-    private val parser = LabelParser(StubAdditiveMasterRepository())
+    private val parser = LabelParser(StubAdditiveLookup())
 
     @Test
     fun `classifies preservatives`() {
