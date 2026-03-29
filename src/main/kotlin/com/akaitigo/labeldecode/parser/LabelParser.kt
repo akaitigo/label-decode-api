@@ -5,7 +5,7 @@ import com.akaitigo.labeldecode.model.Allergen
 import com.akaitigo.labeldecode.model.AllergenType
 import com.akaitigo.labeldecode.model.Ingredient
 import com.akaitigo.labeldecode.model.ParsedLabel
-import com.akaitigo.labeldecode.repository.AdditiveMasterRepository
+import com.akaitigo.labeldecode.repository.AdditiveLookup
 import jakarta.enterprise.context.ApplicationScoped
 
 private val SLASH_PATTERN = Regex("[/／]")
@@ -52,11 +52,9 @@ private val ALLERGEN_FALSE_POSITIVES =
         "卵" to setOf("卵殻Ca"),
     )
 
-const val MAX_RAW_TEXT_LENGTH = 10_000
-
 @ApplicationScoped
 class LabelParser(
-    private val additiveMasterRepository: AdditiveMasterRepository,
+    private val additiveLookup: AdditiveLookup,
 ) {
     fun parse(rawText: String): ParsedLabel {
         val parts = SLASH_PATTERN.split(rawText, limit = 2)
@@ -112,8 +110,8 @@ class LabelParser(
         name: String,
     ): String =
         ADDITIVE_CATEGORY_PATTERN.find(rawItem)?.groupValues?.get(1)
-            ?: additiveMasterRepository.findCategoryByName(name)
-            ?: additiveMasterRepository.findCategoryByPartialName(name)
+            ?: additiveLookup.findCategoryByName(name)
+            ?: additiveLookup.findCategoryByPartialName(name)
             ?: "その他"
 
     private fun findAllAllergens(text: String): List<Allergen> {

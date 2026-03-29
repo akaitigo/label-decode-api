@@ -43,11 +43,11 @@ if [ -f "pyproject.toml" ]; then
   command -v ruff &>/dev/null || { echo "Installing ruff..."; pip install ruff 2>/dev/null || echo "WARN: ruff install failed"; }
 fi
 # buf (proto管理)
-command -v buf &>/dev/null || { echo "Installing buf..."; go install github.com/bufbuild/buf/cmd/buf@latest 2>/dev/null || echo "WARN: buf install failed"; }
+command -v buf &>/dev/null || { echo "Installing buf..."; go install github.com/bufbuild/buf/cmd/buf@v1.50.0 2>/dev/null || echo "WARN: buf install failed"; }
 # grpcurl (gRPCテスト)
-command -v grpcurl &>/dev/null || { echo "Installing grpcurl..."; go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest 2>/dev/null || echo "WARN: grpcurl install failed"; }
+command -v grpcurl &>/dev/null || { echo "Installing grpcurl..."; go install github.com/fullstorydev/grpcurl/cmd/grpcurl@v1.9.2 2>/dev/null || echo "WARN: grpcurl install failed"; }
 # lefthook（全言語共通: git hooks 管理）
-command -v lefthook &>/dev/null || { echo "Installing lefthook..."; go install github.com/evilmartians/lefthook@latest 2>/dev/null || npm install -g lefthook 2>/dev/null || echo "WARN: lefthook install failed"; }
+command -v lefthook &>/dev/null || { echo "Installing lefthook..."; go install github.com/evilmartians/lefthook@v1.10.10 2>/dev/null || npm install -g lefthook@1.10.10 2>/dev/null || echo "WARN: lefthook install failed"; }
 echo "Tool check complete."
 
 # 2. Gitログ読取

@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class DestructiveTest {
-    private val parser = LabelParser(StubAdditiveMasterRepository())
+    private val parser = LabelParser(StubAdditiveLookup())
 
     @Test
     fun `empty string returns empty results`() {

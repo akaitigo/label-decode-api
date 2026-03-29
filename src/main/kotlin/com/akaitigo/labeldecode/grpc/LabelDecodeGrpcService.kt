@@ -9,10 +9,11 @@ import akaitigo.labeldecode.v1.ParseLabelRequest
 import akaitigo.labeldecode.v1.ParseLabelResponse
 import com.akaitigo.labeldecode.model.AllergenType
 import com.akaitigo.labeldecode.parser.LabelParser
-import com.akaitigo.labeldecode.parser.MAX_RAW_TEXT_LENGTH
 import io.grpc.Status
 import io.grpc.stub.StreamObserver
 import io.quarkus.grpc.GrpcService
+
+private const val MAX_RAW_TEXT_LENGTH = 10_000
 
 @GrpcService
 class LabelDecodeGrpcService(
