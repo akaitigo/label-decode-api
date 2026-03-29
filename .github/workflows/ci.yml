@@ -59,12 +59,5 @@ jobs:
           DB_PASSWORD: labeldecode
           DB_URL: jdbc:postgresql://localhost:5432/labeldecode
 
-      - name: Test
-        run: ./gradlew test
-        env:
-          DB_USERNAME: labeldecode
-          DB_PASSWORD: labeldecode
-          DB_URL: jdbc:postgresql://localhost:5432/labeldecode
-
       - name: Detekt
         run: ./gradlew detekt

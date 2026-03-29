@@ -26,7 +26,7 @@
 src/main/kotlin/com/akaitigo/labeldecode/  -- Kotlin gRPC サーバー
 src/main/resources/                         -- 設定ファイル
 src/test/kotlin/com/akaitigo/labeldecode/  -- テスト
-proto/labeldecode/v1/                       -- Proto定義
+src/main/proto/akaitigo/labeldecode/v1/     -- Proto定義
 parser/                                     -- Python NLP パーサー
 docs/adr/                                   -- Architecture Decision Records
 ```
