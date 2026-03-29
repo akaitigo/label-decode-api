@@ -1,7 +1,7 @@
 version: v2
 
 modules:
-  - path: proto
+  - path: src/main/proto
     name: buf.build/akaitigo/label-decode-api
 
 lint:
