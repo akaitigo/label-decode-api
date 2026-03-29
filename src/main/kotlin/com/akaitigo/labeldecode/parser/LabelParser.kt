@@ -50,6 +50,9 @@ private val ALLERGEN_FALSE_POSITIVES =
         "もも" to setOf("もも色素"),
         "乳" to setOf("乳化剤", "乳化"),
         "卵" to setOf("卵殻Ca"),
+        "大豆" to setOf("大豆油", "大豆レシチン"),
+        "ごま" to setOf("ごま油"),
+        "小麦" to setOf("小麦でん粉", "小麦胚芽油"),
     )
 
 @ApplicationScoped
@@ -104,6 +107,17 @@ class LabelParser(
     }
 
     fun detectAllergens(text: String): List<Allergen> = findAllAllergens(text)
+
+    fun parseAdditivesFromFullText(rawText: String): List<Additive> {
+        val parts = SLASH_PATTERN.split(rawText, limit = 2)
+        val additivesPart =
+            if (parts.size > 1) {
+                parts[1].trim()
+            } else {
+                ""
+            }
+        return parseAdditives(additivesPart)
+    }
 
     private fun resolveAdditiveCategory(
         rawItem: String,

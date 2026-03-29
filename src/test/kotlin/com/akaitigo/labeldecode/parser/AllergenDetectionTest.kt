@@ -45,7 +45,7 @@ class AllergenDetectionTest {
 
     @Test
     fun `detectAllergens handles mixed mandatory and recommended`() {
-        val result = parser.detectAllergens("小麦粉、大豆油、卵黄、りんご果汁")
+        val result = parser.detectAllergens("小麦粉、大豆（遺伝子組換えでない）、卵黄、りんご果汁")
         val mandatoryNames = result.filter { it.type == AllergenType.MANDATORY }.map { it.name }
         val recommendedNames = result.filter { it.type == AllergenType.RECOMMENDED }.map { it.name }
 
@@ -53,5 +53,47 @@ class AllergenDetectionTest {
         assertTrue(mandatoryNames.contains("卵"))
         assertTrue(recommendedNames.contains("大豆"))
         assertTrue(recommendedNames.contains("りんご"))
+    }
+
+    @Test
+    fun `false positive - 大豆油 does not trigger 大豆 allergen`() {
+        val result = parser.detectAllergens("大豆油、砂糖")
+        assertTrue(result.none { it.name == "大豆" })
+    }
+
+    @Test
+    fun `false positive - 大豆レシチン does not trigger 大豆 allergen`() {
+        val result = parser.detectAllergens("大豆レシチン、食塩")
+        assertTrue(result.none { it.name == "大豆" })
+    }
+
+    @Test
+    fun `false positive - ごま油 does not trigger ごま allergen`() {
+        val result = parser.detectAllergens("ごま油、醤油")
+        assertTrue(result.none { it.name == "ごま" })
+    }
+
+    @Test
+    fun `false positive - 小麦でん粉 does not trigger 小麦 allergen`() {
+        val result = parser.detectAllergens("小麦でん粉、水")
+        assertTrue(result.none { it.name == "小麦" })
+    }
+
+    @Test
+    fun `false positive - もも色素 does not trigger もも allergen`() {
+        val result = parser.detectAllergens("もも色素、砂糖")
+        assertTrue(result.none { it.name == "もも" })
+    }
+
+    @Test
+    fun `false positive - 乳化剤 does not trigger 乳 allergen`() {
+        val result = parser.detectAllergens("乳化剤、香料")
+        assertTrue(result.none { it.name == "乳" })
+    }
+
+    @Test
+    fun `real allergen detected even when false positive text also present`() {
+        val result = parser.detectAllergens("大豆油、大豆（遺伝子組換えでない）")
+        assertTrue(result.any { it.name == "大豆" })
     }
 }

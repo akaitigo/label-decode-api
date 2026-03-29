@@ -58,7 +58,7 @@ class LabelDecodeGrpcServiceTest {
         val request =
             DetectAllergensRequest
                 .newBuilder()
-                .setRawText("小麦粉（小麦を含む）、卵、乳製品、大豆油")
+                .setRawText("小麦粉（小麦を含む）、卵、乳製品、大豆（遺伝子組換えでない）")
                 .build()
 
         val response = client.detectAllergens(request)
