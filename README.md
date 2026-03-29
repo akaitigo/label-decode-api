@@ -44,6 +44,32 @@ grpcurl -plaintext -d '{"raw_text": "小麦粉、砂糖、バター、卵/ソル
   localhost:9090 akaitigo.labeldecode.v1.LabelDecodeService/ParseLabel
 ```
 
+## デモ出力
+
+```json
+// ParseLabel("小麦粉、砂糖、バター、卵/ソルビン酸K（保存料）、カラメル色素")
+{
+  "label": {
+    "ingredients": [
+      {"name": "小麦粉", "allergenSources": []},
+      {"name": "砂糖", "allergenSources": []},
+      {"name": "バター", "allergenSources": []},
+      {"name": "卵", "allergenSources": []}
+    ],
+    "additives": [
+      {"name": "ソルビン酸K", "category": "保存料"},
+      {"name": "カラメル色素", "category": "その他"}
+    ],
+    "allergens": [
+      {"name": "小麦", "type": "ALLERGEN_TYPE_MANDATORY", "sourceText": "小麦"},
+      {"name": "卵", "type": "ALLERGEN_TYPE_MANDATORY", "sourceText": "卵"},
+      {"name": "乳", "type": "ALLERGEN_TYPE_MANDATORY", "sourceText": "乳"}
+    ],
+    "originalText": "小麦粉、砂糖、バター、卵/ソルビン酸K（保存料）、カラメル色素"
+  }
+}
+```
+
 ## API
 
 gRPC サービス: `akaitigo.labeldecode.v1.LabelDecodeService`
@@ -54,7 +80,7 @@ gRPC サービス: `akaitigo.labeldecode.v1.LabelDecodeService`
 | `DetectAllergens` | アレルゲンのみを検出 |
 | `ClassifyAdditives` | 添加物を用途別に分類 |
 
-Proto定義: [`proto/labeldecode/v1/label_decode_service.proto`](proto/labeldecode/v1/label_decode_service.proto)
+Proto定義: [`src/main/proto/akaitigo/labeldecode/v1/label_decode_service.proto`](src/main/proto/akaitigo/labeldecode/v1/label_decode_service.proto)
 
 ## ライセンス
 
