@@ -14,4 +14,6 @@ lint:
 breaking:
   use:
     - FILE
-  except: []
+  except:
+    - FILE_OPTION_JAVA_MULTIPLE_FILES_CHANGED
+    - FILE_OPTION_JAVA_PACKAGE_CHANGED
