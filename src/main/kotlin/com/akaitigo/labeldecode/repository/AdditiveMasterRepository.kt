@@ -1,21 +1,20 @@
 package com.akaitigo.labeldecode.repository
 
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.inject.Inject
+import java.sql.ResultSet
 import javax.sql.DataSource
 
 @ApplicationScoped
-class AdditiveMasterRepository {
-    @Inject
-    lateinit var dataSource: DataSource
-
-    fun findCategoryByName(name: String): String? =
+open class AdditiveMasterRepository(
+    private val dataSource: DataSource,
+) {
+    open fun findCategoryByName(name: String): String? =
         executeQuery(
             "SELECT category FROM additive_master WHERE name = ?",
             name,
         )
 
-    fun findCategoryByPartialName(name: String): String? =
+    open fun findCategoryByPartialName(name: String): String? =
         executeQuery(
             "SELECT category FROM additive_master " +
                 "WHERE ? LIKE '%' || name || '%' " +
@@ -27,18 +26,24 @@ class AdditiveMasterRepository {
         sql: String,
         param: String,
     ): String? {
-        val conn = dataSource.connection
-        conn.use {
-            val stmt = it.prepareStatement(sql)
-            stmt.use { ps ->
-                ps.setString(1, param)
-                val rs = ps.executeQuery()
-                return if (rs.next()) {
-                    rs.getString("category")
-                } else {
-                    null
-                }
-            }
-        }
+        val rs = prepareAndExecute(sql, param)
+        return rs.use { extractCategory(it) }
     }
+
+    private fun prepareAndExecute(
+        sql: String,
+        param: String,
+    ): ResultSet {
+        val conn = dataSource.connection
+        val stmt = conn.prepareStatement(sql)
+        stmt.setString(1, param)
+        return stmt.executeQuery()
+    }
+
+    private fun extractCategory(rs: ResultSet): String? =
+        if (rs.next()) {
+            rs.getString("category")
+        } else {
+            null
+        }
 }

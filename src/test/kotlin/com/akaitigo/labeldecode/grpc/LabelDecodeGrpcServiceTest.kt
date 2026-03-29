@@ -1,9 +1,9 @@
 package com.akaitigo.labeldecode.grpc
 
+import akaitigo.labeldecode.v1.ClassifyAdditivesRequest
+import akaitigo.labeldecode.v1.DetectAllergensRequest
 import akaitigo.labeldecode.v1.LabelDecodeServiceGrpc
-import akaitigo.labeldecode.v1.LabelDecodeServiceOuterClass.ClassifyAdditivesRequest
-import akaitigo.labeldecode.v1.LabelDecodeServiceOuterClass.DetectAllergensRequest
-import akaitigo.labeldecode.v1.LabelDecodeServiceOuterClass.ParseLabelRequest
+import akaitigo.labeldecode.v1.ParseLabelRequest
 import io.grpc.StatusRuntimeException
 import io.quarkus.grpc.GrpcClient
 import io.quarkus.test.junit.QuarkusTest
