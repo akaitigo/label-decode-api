@@ -108,14 +108,7 @@ class LabelDecodeGrpcService(
     ) {
         val rawText = validateRawText(request.rawText, responseObserver) ?: return
 
-        val parts = rawText.split(Regex("[/／]"), limit = 2)
-        val additivesPart =
-            if (parts.size > 1) {
-                parts[1].trim()
-            } else {
-                ""
-            }
-        val additives = parser.parseAdditives(additivesPart)
+        val additives = parser.parseAdditivesFromFullText(rawText)
 
         val protoAdditives =
             additives.map { additive ->
