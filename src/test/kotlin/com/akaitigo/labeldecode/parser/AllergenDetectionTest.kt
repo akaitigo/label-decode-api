@@ -8,7 +8,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 
 class AllergenDetectionTest {
-    private val parser = LabelParser()
+    private val parser = LabelParser(StubAdditiveMasterRepository())
 
     @ParameterizedTest
     @ValueSource(strings = ["えび", "かに", "くるみ", "小麦", "そば", "卵", "乳", "落花生"])

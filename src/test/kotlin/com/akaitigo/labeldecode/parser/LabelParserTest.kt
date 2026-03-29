@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class LabelParserTest {
-    private val parser = LabelParser()
+    private val parser = LabelParser(StubAdditiveMasterRepository())
 
     @Test
     fun `parse splits ingredients and additives by slash`() {

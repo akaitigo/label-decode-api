@@ -30,6 +30,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -48,6 +50,10 @@ jobs:
 
       - name: buf lint
         run: buf lint
+
+      - name: buf breaking
+        if: github.event_name == 'pull_request'
+        run: buf breaking --against '.git#branch=origin/main'
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew

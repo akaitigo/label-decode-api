@@ -13,5 +13,4 @@ lint:
 
 breaking:
   use:
-    - FILE
-  except: []
+    - WIRE

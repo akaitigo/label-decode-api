@@ -1,15 +1,15 @@
 package com.akaitigo.labeldecode.grpc
 
+import akaitigo.labeldecode.v1.ClassifyAdditivesRequest
+import akaitigo.labeldecode.v1.ClassifyAdditivesResponse
+import akaitigo.labeldecode.v1.DetectAllergensRequest
+import akaitigo.labeldecode.v1.DetectAllergensResponse
 import akaitigo.labeldecode.v1.LabelDecodeServiceGrpc
-import akaitigo.labeldecode.v1.LabelDecodeServiceOuterClass
-import akaitigo.labeldecode.v1.LabelDecodeServiceOuterClass.ClassifyAdditivesRequest
-import akaitigo.labeldecode.v1.LabelDecodeServiceOuterClass.ClassifyAdditivesResponse
-import akaitigo.labeldecode.v1.LabelDecodeServiceOuterClass.DetectAllergensRequest
-import akaitigo.labeldecode.v1.LabelDecodeServiceOuterClass.DetectAllergensResponse
-import akaitigo.labeldecode.v1.LabelDecodeServiceOuterClass.ParseLabelRequest
-import akaitigo.labeldecode.v1.LabelDecodeServiceOuterClass.ParseLabelResponse
+import akaitigo.labeldecode.v1.ParseLabelRequest
+import akaitigo.labeldecode.v1.ParseLabelResponse
 import com.akaitigo.labeldecode.model.AllergenType
 import com.akaitigo.labeldecode.parser.LabelParser
+import com.akaitigo.labeldecode.parser.MAX_RAW_TEXT_LENGTH
 import io.grpc.Status
 import io.grpc.stub.StreamObserver
 import io.quarkus.grpc.GrpcService
@@ -22,21 +22,13 @@ class LabelDecodeGrpcService(
         request: ParseLabelRequest,
         responseObserver: StreamObserver<ParseLabelResponse>,
     ) {
-        val rawText = request.rawText
-        if (rawText.isBlank()) {
-            responseObserver.onError(
-                Status.INVALID_ARGUMENT
-                    .withDescription("raw_text must not be empty")
-                    .asRuntimeException(),
-            )
-            return
-        }
+        val rawText = validateRawText(request.rawText, responseObserver) ?: return
 
         val parsed = parser.parse(rawText)
 
         val protoIngredients =
             parsed.ingredients.map { ingredient ->
-                LabelDecodeServiceOuterClass.Ingredient
+                akaitigo.labeldecode.v1.Ingredient
                     .newBuilder()
                     .setName(ingredient.name)
                     .addAllAllergenSources(ingredient.allergenSources)
@@ -45,7 +37,7 @@ class LabelDecodeGrpcService(
 
         val protoAdditives =
             parsed.additives.map { additive ->
-                LabelDecodeServiceOuterClass.Additive
+                akaitigo.labeldecode.v1.Additive
                     .newBuilder()
                     .setName(additive.name)
                     .setCategory(additive.category)
@@ -54,7 +46,7 @@ class LabelDecodeGrpcService(
 
         val protoAllergens =
             parsed.allergens.map { allergen ->
-                LabelDecodeServiceOuterClass.Allergen
+                akaitigo.labeldecode.v1.Allergen
                     .newBuilder()
                     .setName(allergen.name)
                     .setType(mapAllergenType(allergen.type))
@@ -63,7 +55,7 @@ class LabelDecodeGrpcService(
             }
 
         val label =
-            LabelDecodeServiceOuterClass.ParsedLabel
+            akaitigo.labeldecode.v1.ParsedLabel
                 .newBuilder()
                 .addAllIngredients(protoIngredients)
                 .addAllAdditives(protoAdditives)
@@ -85,21 +77,13 @@ class LabelDecodeGrpcService(
         request: DetectAllergensRequest,
         responseObserver: StreamObserver<DetectAllergensResponse>,
     ) {
-        val rawText = request.rawText
-        if (rawText.isBlank()) {
-            responseObserver.onError(
-                Status.INVALID_ARGUMENT
-                    .withDescription("raw_text must not be empty")
-                    .asRuntimeException(),
-            )
-            return
-        }
+        val rawText = validateRawText(request.rawText, responseObserver) ?: return
 
         val allergens = parser.detectAllergens(rawText)
 
         val protoAllergens =
             allergens.map { allergen ->
-                LabelDecodeServiceOuterClass.Allergen
+                akaitigo.labeldecode.v1.Allergen
                     .newBuilder()
                     .setName(allergen.name)
                     .setType(mapAllergenType(allergen.type))
@@ -121,21 +105,20 @@ class LabelDecodeGrpcService(
         request: ClassifyAdditivesRequest,
         responseObserver: StreamObserver<ClassifyAdditivesResponse>,
     ) {
-        val rawText = request.rawText
-        if (rawText.isBlank()) {
-            responseObserver.onError(
-                Status.INVALID_ARGUMENT
-                    .withDescription("raw_text must not be empty")
-                    .asRuntimeException(),
-            )
-            return
-        }
+        val rawText = validateRawText(request.rawText, responseObserver) ?: return
 
-        val parsed = parser.parse(rawText)
+        val parts = rawText.split(Regex("[/／]"), limit = 2)
+        val additivesPart =
+            if (parts.size > 1) {
+                parts[1].trim()
+            } else {
+                ""
+            }
+        val additives = parser.parseAdditives(additivesPart)
 
         val protoAdditives =
-            parsed.additives.map { additive ->
-                LabelDecodeServiceOuterClass.Additive
+            additives.map { additive ->
+                akaitigo.labeldecode.v1.Additive
                     .newBuilder()
                     .setName(additive.name)
                     .setCategory(additive.category)
@@ -152,9 +135,43 @@ class LabelDecodeGrpcService(
         responseObserver.onCompleted()
     }
 
-    private fun mapAllergenType(type: AllergenType): LabelDecodeServiceOuterClass.AllergenType =
+    private fun <T> validateRawText(
+        rawText: String,
+        responseObserver: StreamObserver<T>,
+    ): String? {
+        val error =
+            when {
+                rawText.isBlank() -> {
+                    "raw_text must not be empty"
+                }
+
+                rawText.length > MAX_RAW_TEXT_LENGTH -> {
+                    "raw_text exceeds maximum length of $MAX_RAW_TEXT_LENGTH"
+                }
+
+                else -> {
+                    null
+                }
+            }
+        if (error != null) {
+            responseObserver.onError(
+                Status.INVALID_ARGUMENT
+                    .withDescription(error)
+                    .asRuntimeException(),
+            )
+            return null
+        }
+        return rawText
+    }
+
+    private fun mapAllergenType(type: AllergenType): akaitigo.labeldecode.v1.AllergenType =
         when (type) {
-            AllergenType.MANDATORY -> LabelDecodeServiceOuterClass.AllergenType.ALLERGEN_TYPE_MANDATORY
-            AllergenType.RECOMMENDED -> LabelDecodeServiceOuterClass.AllergenType.ALLERGEN_TYPE_RECOMMENDED
+            AllergenType.MANDATORY -> {
+                akaitigo.labeldecode.v1.AllergenType.ALLERGEN_TYPE_MANDATORY
+            }
+
+            AllergenType.RECOMMENDED -> {
+                akaitigo.labeldecode.v1.AllergenType.ALLERGEN_TYPE_RECOMMENDED
+            }
         }
 }

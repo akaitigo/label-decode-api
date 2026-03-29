@@ -10,6 +10,11 @@ syntax = "proto3";
 // 食品表示デコードサービスのパッケージ。
 package akaitigo.labeldecode.v1;
 
+// Java コード生成時にメッセージごとに独立ファイルを生成する。
+option java_multiple_files = true;
+// Java パッケージ名。
+option java_package = "akaitigo.labeldecode.v1";
+
 // 食品表示テキストを構造化データに変換するサービス。
 service LabelDecodeService {
   // 食品表示テキストを解析し、構造化データを返す。
