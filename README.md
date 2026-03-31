@@ -70,6 +70,20 @@ grpcurl -plaintext -d '{"raw_text": "小麦粉、砂糖、バター、卵/ソル
 }
 ```
 
+## アーキテクチャ
+
+```
+Client ──gRPC──▶ Kotlin/Quarkus Server
+                    ├── Label Parser (Python NLP)
+                    ├── Additive Classifier
+                    ├── Allergen Detector
+                    └── PostgreSQL (添加物マスタ)
+```
+
+- gRPC サーバーがリクエストを受付、Python パーサーで食品表示テキストを解析
+- 添加物マスタ（PostgreSQL）を参照して用途別分類を実施
+- 特定原材料等28品目のアレルゲンを自動検出
+
 ## API
 
 gRPC サービス: `akaitigo.labeldecode.v1.LabelDecodeService`
