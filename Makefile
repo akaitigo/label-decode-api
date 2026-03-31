@@ -10,7 +10,7 @@ lint:
 	./gradlew detekt
 
 format:
-	./gradlew formatKotlin
+	./gradlew spotlessApply
 
 check: format lint test build
 	@echo "All checks passed."

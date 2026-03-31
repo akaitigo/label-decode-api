@@ -7,6 +7,6 @@ data class Allergen(
 )
 
 enum class AllergenType {
-    MANDATORY,
-    RECOMMENDED,
+  MANDATORY,
+  RECOMMENDED,
 }
