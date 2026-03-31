@@ -96,4 +96,28 @@ class AllergenDetectionTest {
         val result = parser.detectAllergens("大豆油、大豆（遺伝子組換えでない）")
         assertTrue(result.any { it.name == "大豆" })
     }
+
+    @Test
+    fun `multiple false positives together do not trigger allergen`() {
+        val result = parser.detectAllergens("植物油脂(大豆油)、乳化剤(大豆レシチン)")
+        assertTrue(result.none { it.name == "大豆" }) {
+            "大豆油 + 大豆レシチン should not trigger 大豆 allergen"
+        }
+    }
+
+    @Test
+    fun `multiple false positives with real allergen still detects`() {
+        val result = parser.detectAllergens("植物油脂(大豆油)、乳化剤(大豆レシチン)、大豆")
+        assertTrue(result.any { it.name == "大豆" }) {
+            "Real 大豆 should be detected even with false positive texts"
+        }
+    }
+
+    @Test
+    fun `false positive - 乳化剤 and 乳化 together do not trigger 乳 allergen`() {
+        val result = parser.detectAllergens("乳化剤(大豆レシチン)、グリセリン脂肪酸エステル(乳化)")
+        assertTrue(result.none { it.name == "乳" }) {
+            "乳化剤 + 乳化 should not trigger 乳 allergen"
+        }
+    }
 }
