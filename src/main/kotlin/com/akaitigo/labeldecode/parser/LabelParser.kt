@@ -163,9 +163,8 @@ class LabelParser(
             return false
         }
         val falsePositives = ALLERGEN_FALSE_POSITIVES[allergen]
-        return falsePositives?.none { fp ->
-            !text.replace(fp, "").contains(allergen)
-        } ?: true
+        val cleaned = falsePositives?.fold(text) { acc, fp -> acc.replace(fp, "") } ?: text
+        return cleaned.contains(allergen)
     }
 }
 
