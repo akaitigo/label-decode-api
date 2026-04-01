@@ -112,4 +112,28 @@ class LabelParserTest {
     val result = parser.parse(text)
     assertEquals(text, result.originalText)
   }
+
+  @Test
+  fun `parseIngredients does not split on commas inside parentheses`() {
+    val result = parser.parseIngredients("しょうゆ（小麦,大豆を含む）、砂糖")
+    assertEquals(2, result.size)
+    assertEquals("しょうゆ", result[0].name)
+    assertEquals("砂糖", result[1].name)
+  }
+
+  @Test
+  fun `parseIngredients does not split nested parentheses on commas`() {
+    val result = parser.parseIngredients("植物油脂（菜種油（国産）,大豆油）、食塩")
+    assertEquals(2, result.size)
+    assertEquals("食塩", result[1].name)
+  }
+
+  @Test
+  fun `parseIngredients handles full-width commas inside parentheses`() {
+    val result = parser.parseIngredients("しょうゆ（小麦，大豆を含む）、砂糖、食塩")
+    assertEquals(3, result.size)
+    assertEquals("しょうゆ", result[0].name)
+    assertEquals("砂糖", result[1].name)
+    assertEquals("食塩", result[2].name)
+  }
 }

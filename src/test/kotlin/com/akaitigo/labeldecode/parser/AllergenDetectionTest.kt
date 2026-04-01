@@ -133,4 +133,42 @@ class AllergenDetectionTest {
     val result = parser.detectAllergens("乳化剤(大豆レシチン)、グリセリン脂肪酸エステル(乳化)")
     assertTrue(result.none { it.name == "乳" }) { "乳化剤 + 乳化 should not trigger 乳 allergen" }
   }
+
+  @Test
+  fun `false positive - 乳酸 does not trigger 乳 allergen`() {
+    val result = parser.detectAllergens("乳酸、クエン酸")
+    assertTrue(result.none { it.name == "乳" }) { "乳酸 should not trigger 乳 allergen" }
+  }
+
+  @Test
+  fun `false positive - 乳酸菌 does not trigger 乳 allergen`() {
+    val result = parser.detectAllergens("乳酸菌、ビタミンC")
+    assertTrue(result.none { it.name == "乳" }) { "乳酸菌 should not trigger 乳 allergen" }
+  }
+
+  @Test
+  fun `false positive - 乳酸Na does not trigger 乳 allergen`() {
+    val result = parser.detectAllergens("乳酸Na、pH調整剤")
+    assertTrue(result.none { it.name == "乳" }) { "乳酸Na should not trigger 乳 allergen" }
+  }
+
+  @Test
+  fun `false positive - 乳酸Ca does not trigger 乳 allergen`() {
+    val result = parser.detectAllergens("乳酸Ca、食塩")
+    assertTrue(result.none { it.name == "乳" }) { "乳酸Ca should not trigger 乳 allergen" }
+  }
+
+  @Test
+  fun `false positive - multiple 乳 false positives together do not trigger`() {
+    val result = parser.detectAllergens("乳化剤、乳酸菌、乳酸Na")
+    assertTrue(result.none { it.name == "乳" }) { "乳化剤 + 乳酸菌 + 乳酸Na should not trigger 乳 allergen" }
+  }
+
+  @Test
+  fun `real 乳 detected even with 乳酸 false positive present`() {
+    val result = parser.detectAllergens("乳酸菌、脱脂粉乳")
+    assertTrue(result.any { it.name == "乳" }) {
+      "Real 乳 (in 脱脂粉乳) should be detected even with 乳酸菌 present"
+    }
+  }
 }
