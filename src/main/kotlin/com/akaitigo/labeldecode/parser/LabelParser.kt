@@ -10,7 +10,6 @@ import jakarta.enterprise.context.ApplicationScoped
 
 private val SLASH_PATTERN = Regex("[/／]")
 private val PAREN_PATTERN = Regex("[（(]([^）)]+)[）)]")
-private val ITEM_SEPARATOR = Regex("[、,，]")
 
 private val ADDITIVE_CATEGORY_PATTERN =
     Regex(
@@ -46,7 +45,7 @@ private val RECOMMENDED_ALLERGENS =
 private val ALLERGEN_FALSE_POSITIVES =
     mapOf(
         "もも" to setOf("もも色素"),
-        "乳" to setOf("乳化剤", "乳化"),
+        "乳" to setOf("乳化剤", "乳化", "乳酸菌", "乳酸Na", "乳酸Ca", "乳酸"),
         "卵" to setOf("卵殻Ca"),
         "大豆" to setOf("大豆油", "大豆レシチン"),
         "ごま" to setOf("ごま油"),
@@ -158,14 +157,87 @@ class LabelParser(
     if (!text.contains(allergen)) {
       return false
     }
-    val falsePositives = ALLERGEN_FALSE_POSITIVES[allergen]
-    val cleaned = falsePositives?.fold(text) { acc, fp -> acc.replace(fp, "") } ?: text
+    val cleaned = removeFalsePositives(text, allergen)
     return cleaned.contains(allergen)
+  }
+
+  private fun removeFalsePositives(
+      text: String,
+      allergen: String,
+  ): String {
+    val falsePositives = ALLERGEN_FALSE_POSITIVES[allergen] ?: return text
+    val sorted = falsePositives.sortedByDescending { it.length }
+    return sorted.fold(text) { acc, fp -> acc.replace(fp, "") }
   }
 }
 
-private fun splitItems(text: String): List<String> =
-    ITEM_SEPARATOR.split(text).map { it.trim() }.filter { it.isNotEmpty() }
+private val OPEN_PARENS = setOf('（', '(')
+private val CLOSE_PARENS = setOf('）', ')')
+private val SEPARATORS = setOf('、', ',', '，')
+
+private fun splitItems(text: String): List<String> {
+  val items = mutableListOf<String>()
+  val current = StringBuilder()
+  var depth = 0
+  for (ch in text) {
+    depth = updateDepthAndAppend(ch, depth, current, items)
+  }
+  addRemainder(current, items)
+  return items
+}
+
+private fun updateDepthAndAppend(
+    ch: Char,
+    depth: Int,
+    current: StringBuilder,
+    items: MutableList<String>,
+): Int =
+    when {
+      ch in OPEN_PARENS -> {
+        current.append(ch)
+        depth + 1
+      }
+
+      ch in CLOSE_PARENS -> {
+        current.append(ch)
+        if (depth > 0) {
+          depth - 1
+        } else {
+          depth
+        }
+      }
+
+      ch in SEPARATORS && depth == 0 -> {
+        flushItem(current, items)
+        depth
+      }
+
+      else -> {
+        current.append(ch)
+        depth
+      }
+    }
+
+private fun flushItem(
+    current: StringBuilder,
+    items: MutableList<String>,
+) {
+  val item = current.toString().trim()
+  if (item.isNotEmpty()) {
+    items.add(item)
+  }
+  current.clear()
+}
+
+private fun addRemainder(
+    current: StringBuilder,
+    items: MutableList<String>,
+) {
+  val last = current.toString().trim()
+  if (last.isNotEmpty()) {
+    items.add(last)
+  }
+}
 
 private fun extractParenContent(text: String): List<String> =
     PAREN_PATTERN.findAll(text).map { it.groupValues[1] }.toList()
