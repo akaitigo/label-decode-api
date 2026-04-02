@@ -12,10 +12,12 @@ import com.akaitigo.labeldecode.parser.LabelParser
 import io.grpc.Status
 import io.grpc.stub.StreamObserver
 import io.quarkus.grpc.GrpcService
+import io.smallrye.common.annotation.Blocking
 
 private const val MAX_RAW_TEXT_LENGTH = 10_000
 
 @GrpcService
+@Blocking
 class LabelDecodeGrpcService(
     private val parser: LabelParser,
 ) : LabelDecodeServiceGrpc.LabelDecodeServiceImplBase() {

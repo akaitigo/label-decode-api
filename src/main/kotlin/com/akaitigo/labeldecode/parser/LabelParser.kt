@@ -9,7 +9,6 @@ import com.akaitigo.labeldecode.repository.AdditiveLookup
 import jakarta.enterprise.context.ApplicationScoped
 
 private val SLASH_PATTERN = Regex("[/／]")
-private val PAREN_PATTERN = Regex("[（(]([^）)]+)[）)]")
 
 private val ADDITIVE_CATEGORY_PATTERN =
     Regex(
@@ -85,7 +84,7 @@ class LabelParser(
     return splitItems(text).map { item ->
       val allergenSources =
           extractParenContent(item).flatMap { content -> findAllAllergens(content) }.map { it.name }
-      val name = item.replace(PAREN_PATTERN, "").trim()
+      val name = removeTopLevelParens(item).trim()
       Ingredient(name = name, allergenSources = allergenSources)
     }
   }
@@ -239,5 +238,86 @@ private fun addRemainder(
   }
 }
 
-private fun extractParenContent(text: String): List<String> =
-    PAREN_PATTERN.findAll(text).map { it.groupValues[1] }.toList()
+/** ネスト対応でトップレベルの括弧とその中身を除去する。 */
+private fun removeTopLevelParens(text: String): String {
+  val result = StringBuilder()
+  var depth = 0
+  for (ch in text) {
+    depth = processParenChar(ch, depth)
+    if (depth == 0 && ch !in CLOSE_PARENS) {
+      result.append(ch)
+    }
+  }
+  return result.toString()
+}
+
+/** 括弧文字に対する depth の変化を計算する。 */
+private fun processParenChar(
+    ch: Char,
+    depth: Int,
+): Int =
+    when {
+      ch in OPEN_PARENS -> depth + 1
+      ch in CLOSE_PARENS && depth > 0 -> depth - 1
+      else -> depth
+    }
+
+/** ネスト対応の括弧内テキスト抽出。トップレベルの括弧の中身を返す。 */
+private fun extractParenContent(text: String): List<String> {
+  val results = mutableListOf<String>()
+  val current = StringBuilder()
+  var depth = 0
+  for (ch in text) {
+    depth = handleExtractChar(ch, depth, current, results)
+  }
+  return results
+}
+
+private fun handleExtractChar(
+    ch: Char,
+    depth: Int,
+    current: StringBuilder,
+    results: MutableList<String>,
+): Int =
+    when {
+      ch in OPEN_PARENS -> {
+        if (depth > 0) {
+          current.append(ch)
+        }
+        depth + 1
+      }
+
+      ch in CLOSE_PARENS -> {
+        handleExtractClose(depth, current, results)
+      }
+
+      else -> {
+        if (depth > 0) {
+          current.append(ch)
+        }
+        depth
+      }
+    }
+
+private fun handleExtractClose(
+    depth: Int,
+    current: StringBuilder,
+    results: MutableList<String>,
+): Int {
+  val newDepth =
+      if (depth > 0) {
+        depth - 1
+      } else {
+        depth
+      }
+  if (newDepth == 0) {
+    val content = current.toString().trim()
+    if (content.isNotEmpty()) {
+      results.add(content)
+    }
+    current.clear()
+  } else if (newDepth > 0) {
+    current.append('）')
+  }
+  return newDepth
+}

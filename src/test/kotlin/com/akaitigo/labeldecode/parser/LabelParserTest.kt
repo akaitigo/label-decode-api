@@ -125,7 +125,16 @@ class LabelParserTest {
   fun `parseIngredients does not split nested parentheses on commas`() {
     val result = parser.parseIngredients("植物油脂（菜種油（国産）,大豆油）、食塩")
     assertEquals(2, result.size)
+    assertEquals("植物油脂", result[0].name)
     assertEquals("食塩", result[1].name)
+  }
+
+  @Test
+  fun `parseIngredients extracts allergens from double nested parentheses`() {
+    val result = parser.parseIngredients("調味液（しょうゆ（小麦を含む）,みりん）、食塩")
+    assertEquals(2, result.size)
+    assertEquals("調味液", result[0].name)
+    assertTrue(result[0].allergenSources.contains("小麦"))
   }
 
   @Test
