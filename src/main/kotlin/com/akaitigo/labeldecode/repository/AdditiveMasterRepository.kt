@@ -21,6 +21,26 @@ class AdditiveMasterRepository(
           name,
       )
 
+  override fun findCategoriesByNames(names: List<String>): Map<String, String> {
+    if (names.isEmpty()) {
+      return emptyMap()
+    }
+    val placeholders = names.joinToString(",") { "?" }
+    val sql = "SELECT name, category FROM additive_master WHERE name IN ($placeholders)"
+    return dataSource.connection.use { conn ->
+      conn.prepareStatement(sql).use { stmt ->
+        names.forEachIndexed { index, name -> stmt.setString(index + 1, name) }
+        stmt.executeQuery().use { rs ->
+          val result = mutableMapOf<String, String>()
+          while (rs.next()) {
+            result[rs.getString("name")] = rs.getString("category")
+          }
+          result
+        }
+      }
+    }
+  }
+
   private fun executeQuery(
       sql: String,
       param: String,

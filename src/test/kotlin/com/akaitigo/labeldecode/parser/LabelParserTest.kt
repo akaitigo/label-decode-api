@@ -145,4 +145,24 @@ class LabelParserTest {
     assertEquals("砂糖", result[1].name)
     assertEquals("食塩", result[2].name)
   }
+
+  @Test
+  fun `parse does not split on slash inside parentheses`() {
+    val result = parser.parse("植物油脂（菜種油/大豆油）、砂糖/香料")
+    assertEquals(2, result.ingredients.size)
+    assertEquals("植物油脂", result.ingredients[0].name)
+    assertEquals("砂糖", result.ingredients[1].name)
+    assertEquals(1, result.additives.size)
+    assertEquals("香料", result.additives[0].name)
+  }
+
+  @Test
+  fun `parse handles slash inside nested parentheses`() {
+    val result = parser.parse("調味液（しょうゆ（小麦/大豆を含む））、食塩/酸味料")
+    assertEquals(2, result.ingredients.size)
+    assertEquals("調味液", result.ingredients[0].name)
+    assertEquals("食塩", result.ingredients[1].name)
+    assertEquals(1, result.additives.size)
+    assertEquals("酸味料", result.additives[0].name)
+  }
 }

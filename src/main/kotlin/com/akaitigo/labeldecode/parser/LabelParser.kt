@@ -8,7 +8,7 @@ import com.akaitigo.labeldecode.model.ParsedLabel
 import com.akaitigo.labeldecode.repository.AdditiveLookup
 import jakarta.enterprise.context.ApplicationScoped
 
-private val SLASH_PATTERN = Regex("[/／]")
+private val SLASH_CHARS = setOf('/', '／')
 
 private val ADDITIVE_CATEGORY_PATTERN =
     Regex(
@@ -56,14 +56,7 @@ class LabelParser(
     private val additiveLookup: AdditiveLookup,
 ) {
   fun parse(rawText: String): ParsedLabel {
-    val parts = SLASH_PATTERN.split(rawText, limit = 2)
-    val ingredientsPart = parts[0].trim()
-    val additivesPart =
-        if (parts.size > 1) {
-          parts[1].trim()
-        } else {
-          ""
-        }
+    val (ingredientsPart, additivesPart) = splitAtTopLevelSlash(rawText)
 
     val ingredients = parseIngredients(ingredientsPart)
     val additives = parseAdditives(additivesPart)
@@ -93,9 +86,31 @@ class LabelParser(
     if (text.isBlank()) {
       return emptyList()
     }
-    return splitItems(text).map { item ->
-      val name = item.replace(ADDITIVE_CATEGORY_PATTERN, "").trim()
-      val category = resolveAdditiveCategory(item, name)
+    val items = splitItems(text)
+    val parsed =
+        items.map { item ->
+          val name = item.replace(ADDITIVE_CATEGORY_PATTERN, "").trim()
+          val inlineCategory = ADDITIVE_CATEGORY_PATTERN.find(item)?.groupValues?.get(1)
+          Triple(item, name, inlineCategory)
+        }
+
+    // Collect names that need DB lookup (no inline category from parentheses)
+    val namesNeedingLookup = parsed.filter { it.third == null }.map { it.second }
+
+    // Single batch query instead of per-additive DB round-trip
+    val batchCategories =
+        if (namesNeedingLookup.isNotEmpty()) {
+          additiveLookup.findCategoriesByNames(namesNeedingLookup)
+        } else {
+          emptyMap()
+        }
+
+    return parsed.map { (_, name, inlineCategory) ->
+      val category =
+          inlineCategory
+              ?: batchCategories[name]
+              ?: additiveLookup.findCategoryByPartialName(name)
+              ?: "その他"
       Additive(name = name, category = category)
     }
   }
@@ -103,24 +118,9 @@ class LabelParser(
   fun detectAllergens(text: String): List<Allergen> = findAllAllergens(text)
 
   fun parseAdditivesFromFullText(rawText: String): List<Additive> {
-    val parts = SLASH_PATTERN.split(rawText, limit = 2)
-    val additivesPart =
-        if (parts.size > 1) {
-          parts[1].trim()
-        } else {
-          ""
-        }
+    val (_, additivesPart) = splitAtTopLevelSlash(rawText)
     return parseAdditives(additivesPart)
   }
-
-  private fun resolveAdditiveCategory(
-      rawItem: String,
-      name: String,
-  ): String =
-      ADDITIVE_CATEGORY_PATTERN.find(rawItem)?.groupValues?.get(1)
-          ?: additiveLookup.findCategoryByName(name)
-          ?: additiveLookup.findCategoryByPartialName(name)
-          ?: "その他"
 
   private fun findAllAllergens(text: String): List<Allergen> {
     val found = mutableListOf<Allergen>()
@@ -320,4 +320,28 @@ private fun handleExtractClose(
     current.append('）')
   }
   return newDepth
+}
+
+/**
+ * 括弧depth追跡しながらトップレベルのスラッシュで分割する。 括弧内のスラッシュは区切り文字として扱わない。 例: "原材料（産地/等級）/添加物" -> Pair("原材料（産地/等級）",
+ * "添加物")
+ */
+private fun splitAtTopLevelSlash(text: String): Pair<String, String> {
+  var depth = 0
+  for ((index, ch) in text.withIndex()) {
+    when {
+      ch in OPEN_PARENS -> {
+        depth++
+      }
+
+      ch in CLOSE_PARENS && depth > 0 -> {
+        depth--
+      }
+
+      ch in SLASH_CHARS && depth == 0 -> {
+        return Pair(text.substring(0, index).trim(), text.substring(index + 1).trim())
+      }
+    }
+  }
+  return Pair(text.trim(), "")
 }
