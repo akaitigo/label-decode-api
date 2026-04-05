@@ -3,7 +3,7 @@ plugins {
   kotlin("plugin.allopen") version "2.3.20"
   id("io.quarkus") version "3.34.1"
   id("io.gitlab.arturbosch.detekt") version "1.23.8"
-  id("com.diffplug.spotless") version "7.0.3"
+  id("com.diffplug.spotless") version "8.4.0"
 }
 
 repositories { mavenCentral() }
