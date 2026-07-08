@@ -3,7 +3,7 @@ plugins {
   kotlin("plugin.allopen") version "2.3.21"
   id("io.quarkus") version "3.35.1"
   id("io.gitlab.arturbosch.detekt") version "1.23.8"
-  id("com.diffplug.spotless") version "7.0.3"
+  id("com.diffplug.spotless") version "8.4.0"
 }
 
 repositories { mavenCentral() }
@@ -14,8 +14,8 @@ val quarkusPlatformVersion: String by project
 
 dependencies {
   implementation(
-      enforcedPlatform(
-          "$quarkusPlatformGroupId:$quarkusPlatformArtifactId:$quarkusPlatformVersion"))
+      enforcedPlatform("$quarkusPlatformGroupId:$quarkusPlatformArtifactId:$quarkusPlatformVersion")
+  )
   implementation("io.quarkus:quarkus-kotlin")
   implementation("io.quarkus:quarkus-arc")
   implementation("io.quarkus:quarkus-grpc")
