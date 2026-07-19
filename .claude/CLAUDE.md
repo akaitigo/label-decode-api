@@ -16,7 +16,12 @@ Kotlin/Quarkus gRPC サーバーが食品表示テキスト構造化APIを提供
 
 - Python パーサーは Kotlin プロセスからコマンドライン呼び出し（v2 で gRPC 化）
 - 添加物マスタは初期データをSQL migration で投入
-- 認証なし（MVP スコープ外）
+
+### セキュリティ（v1.1.0 で本番化。ADR-003 参照）
+
+- APIキー認証: `x-api-key` メタデータ + gRPC グローバルインターセプタ（prod デフォルト有効、dev/test 無効）
+- レート制限: APIキー単位のインメモリ・トークンバケット（超過は RESOURCE_EXHAUSTED）
+- TLS: `QUARKUS_GRPC_SERVER_SSL_CERTIFICATE` / `QUARKUS_GRPC_SERVER_SSL_KEY` で有効化
 
 ## 外部サービス連携
 

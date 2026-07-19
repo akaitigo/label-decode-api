@@ -2,7 +2,7 @@
 
 食品の一括表示テキストを構造化データに変換する gRPC API。原材料名の正規化、添加物の用途別分類、アレルゲン自動検出を提供する。
 
-> **Warning**: このプロジェクトはMVPです。本番利用前に認証・認可、レート制限、TLS設定が必要です。
+APIキー認証・レート制限・TLS設定を備え、本番利用に対応しています（[ADR-003](docs/adr/003-api-key-auth-rate-limit-tls.md)）。
 
 ## 技術スタック
 
@@ -95,6 +95,48 @@ gRPC サービス: `akaitigo.labeldecode.v1.LabelDecodeService`
 | `ClassifyAdditives` | 添加物を用途別に分類 |
 
 Proto定義: [`src/main/proto/akaitigo/labeldecode/v1/label_decode_service.proto`](src/main/proto/akaitigo/labeldecode/v1/label_decode_service.proto)
+
+## セキュリティ（本番運用）
+
+設定値のサンプルは [`.env.example`](.env.example)、設計判断は [ADR-003](docs/adr/003-api-key-auth-rate-limit-tls.md) を参照。
+
+### API キー認証
+
+prod プロファイルではデフォルト有効。`API_KEYS` 環境変数（カンマ区切りで複数可）でキーを注入する。
+未設定の場合は起動に失敗する（認証なしで本番起動する事故を防ぐ）。
+
+```bash
+# キー生成例
+export API_KEYS=$(openssl rand -hex 32)
+
+# 呼び出し時は x-api-key メタデータを付与（欠落・不正キーは UNAUTHENTICATED = HTTP 401 相当）
+grpcurl -H "x-api-key: $API_KEYS" \
+  -proto akaitigo/labeldecode/v1/label_decode_service.proto -import-path src/main/proto \
+  -d '{"raw_text": "小麦粉、砂糖"}' \
+  <host>:9090 akaitigo.labeldecode.v1.LabelDecodeService/ParseLabel
+```
+
+`dev` / `test` プロファイルでは無効（ローカルの `quarkusDev` はキーなしで呼び出せる）。
+
+### レート制限
+
+APIキー単位のインメモリ・トークンバケット（外部サービス不要）。超過は `RESOURCE_EXHAUSTED`（HTTP 429 相当）。
+
+| 環境変数 | 既定値 | 説明 |
+|---|---|---|
+| `RATE_LIMIT_REQUESTS_PER_MINUTE` | 120 | 毎分の補充レート |
+| `RATE_LIMIT_BURST_CAPACITY` | 30 | 瞬間バースト許容量 |
+
+### TLS
+
+PEM 証明書/鍵のパスを環境変数で注入すると gRPC サーバーが TLS で待ち受ける。
+
+```bash
+export QUARKUS_GRPC_SERVER_SSL_CERTIFICATE=/etc/tls/server.crt
+export QUARKUS_GRPC_SERVER_SSL_KEY=/etc/tls/server.key
+```
+
+Cloud Run 等のマネージド環境では前段で TLS が終端されるため設定不要。直接公開する場合のみ設定する。
 
 ## ライセンス
 
