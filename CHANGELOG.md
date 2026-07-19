@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.1.0 (2026-07-19)
+
+### Production Hardening
+
+- feat: APIキー認証（`x-api-key` メタデータ、gRPCグローバルインターセプタ、定数時間比較、キー未設定時は起動失敗）
+- feat: クライアント単位レート制限（インメモリ・トークンバケット、超過は `RESOURCE_EXHAUSTED`）
+- feat: TLS設定の整備（`QUARKUS_GRPC_SERVER_SSL_CERTIFICATE` / `QUARKUS_GRPC_SERVER_SSL_KEY` による有効化）
+- docs: ADR-003（認証方式・レート制限方式・TLS方針の決定記録）、README のMVP警告を解消、`.env.example` 追加
+
 ## v1.0.0 (2026-04-01)
 
 ### Initial Release
